@@ -14,16 +14,19 @@ InitializeJsonFile() ; Create or open the JSON file
     IniRead, Name, Settings.ini, UserSettings, Name, player1
     IniRead, Delay, Settings.ini, UserSettings, Delay, 250
     IniRead, folderPath, Settings.ini, UserSettings, folderPath, C:\Program Files\Netease
-    IniRead, changeDate, Settings.ini, UserSettings, ChangeDate, 0100
+    IniRead, changeDate, Settings.ini, UserSettings, ChangeDate, 0700
     IniRead, Columns, Settings.ini, UserSettings, Columns, 5
-    IniRead, openPack, Settings.ini, UserSettings, openPack, Mew
-    IniRead, godPack, Settings.ini, UserSettings, godPack, Close
-    IniRead, Instances, Settings.ini, UserSettings, Instances, 10
+    IniRead, openPack, Settings.ini, UserSettings, openPack, Pikachu
+    IniRead, godPack, Settings.ini, UserSettings, godPack, Pause
+    IniRead, Instances, Settings.ini, UserSettings, Instances, 6
 	IniRead, setSpeed, Settings.ini, UserSettings, setSpeed, 2x
-    IniRead, defaultLanguage, Settings.ini, UserSettings, defaultLanguage, English
+    IniRead, defaultLanguage, Settings.ini, UserSettings, defaultLanguage, French
     IniRead, SelectedMonitorIndex, Settings.ini, UserSettings, SelectedMonitorIndex, 1
     IniRead, swipeSpeed, Settings.ini, UserSettings, swipeSpeed, 600
     IniRead, falsePositive, Settings.ini, UserSettings, falsePositive, No
+    EnvGet, DISCORD_WEBHOOK, DISCORD_WEBHOOK
+    IniRead, discordWebhookURL, Settings.ini, UserSettings, discordWebhookURL, %DISCORD_WEBHOOK%
+    IniRead, discordUserId, Settings.ini, UserSettings, discordUserId, "282197676982927375"
 
 ; Main GUI setup
 ; Add the link text at the bottom of the GUI
@@ -246,6 +249,8 @@ IniWrite, %defaultLanguage%, Settings.ini, UserSettings, defaultLanguage
 IniWrite, %SelectedMonitorIndex%, Settings.ini, UserSettings, SelectedMonitorIndex
 IniWrite, %swipeSpeed%, Settings.ini, UserSettings, swipeSpeed
 IniWrite, %falsePositive%, Settings.ini, UserSettings, falsePositive
+IniWrite, %discordWebhookURL%, Settings.ini, UserSettings, discordWebhookURL
+IniWrite, %discordUserId%, Settings.ini, UserSettings, discordUserId
 
 ; Loop to process each instance
 Loop, %Instances%

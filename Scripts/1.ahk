@@ -10,7 +10,7 @@ SetBatchLines, -1
 SetTitleMatchMode, 3
 CoordMode, Pixel, Screen
 
-global winTitle, changeDate, failSafe, openPack, Delay, failSafeTime, StartSkipTime, Columns, failSafe, adbPort, scriptName, adbShell, adbPath, GPTest, StatusText, defaultLanguage, setSpeed, jsonFileName, pauseToggle, SelectedMonitorIndex, swipeSpeed, godPack
+global winTitle, changeDate, failSafe, openPack, Delay, failSafeTime, StartSkipTime, Columns, failSafe, adbPort, scriptName, adbShell, adbPath, GPTest, StatusText, defaultLanguage, setSpeed, jsonFileName, pauseToggle, SelectedMonitorIndex, swipeSpeed, godPack, discordWebhookURL, discordUserId
 
 	
 	adbPath := A_ScriptDir . "\adb\platform-tools\adb.exe"  ; Example path, adjust if necessary
@@ -32,6 +32,8 @@ global winTitle, changeDate, failSafe, openPack, Delay, failSafeTime, StartSkipT
 	IniRead, swipeSpeed, %A_ScriptDir%\..\Settings.ini, UserSettings, swipeSpeed, 600
 	IniRead, falsePositive, %A_ScriptDir%\..\Settings.ini, UserSettings, falsePositive, No
 	IniRead, godPack, %A_ScriptDir%\..\Settings.ini, UserSettings, godPack, 1
+    IniRead, discordWebhookURL, %A_ScriptDir%\..\Settings.ini, UserSettings, discordWebhookURL, ""
+    IniRead, discordUserId, %A_ScriptDir%\..\Settings.ini, UserSettings, discordUserId, ""
 	
 	
 	if(!adbPort) {
@@ -43,6 +45,8 @@ global winTitle, changeDate, failSafe, openPack, Delay, failSafeTime, StartSkipT
 	instanceSleep := scriptName * 1000
 	Sleep, %instanceSleep%
 	RunWait, %adbPath% connect 127.0.0.1:%adbPort%,, Hide
+	
+	LogToDiscord("Starting farm on instance: " .  scriptName)
 	
 	resetWindows()
 	MaxRetries := 10
@@ -969,6 +973,14 @@ KeepSync(X1, Y1, X2, Y2, searchVariation := "", imageName := "DEFAULT", clickx :
 		pNeedle := Gdip_CreateBitmapFromFile(Path)
 		; ImageSearch within the region
 		vRet := Gdip_ImageSearch(pBitmap, pNeedle, vPosXY, X1, Y1, X2, Y2, searchVariation)
+		; pBitmap2 := Gdip_BitmapFromScreen()
+		; pGraphics := Gdip_GraphicsFromImage(pBitmap2)
+		; pPen := Gdip_CreatePen(0xFFFF0000, 1)
+		; Gdip_DrawRectangle(pGraphics, pPen, X1, Y1, X2 - X1, Y2 - Y1)
+		; Gdip_SaveBitmapToFile(pBitmap2, imageName)
+		; Gdip_DeletePen(pPen)
+		; Gdip_DeleteGraphics(pGraphics)
+		; Gdip_DisposeImage(pBitmap2)
 		Gdip_DisposeImage(pNeedle)
 		Gdip_DisposeImage(pBitmap)
 		if (!confirmed && vRet = 1) {
@@ -1101,6 +1113,21 @@ LogToFile(message, logFile := "") {
     FileAppend, % "[" readableTime "] " message "`n", %logFile%
 }
 
+LogToDiscord(message, ping := false) {
+	if (discordWebhookURL != "") {
+		if (ping && discordUserId != "") {
+			data := "{""content"": ""<@" discordUserId "> " message """}"
+		} else {
+			data := "{""content"": """ message """}"
+		}
+
+		whr := ComObjCreate("WinHttp.WinHttpRequest.5.1")
+		whr.Open("POST", discordWebhookURL, false)
+		whr.SetRequestHeader("Content-Type", "application/json")
+		whr.Send(data)
+	}
+}
+
 CreateStatusMessage(Message, GuiName := 50, X := 0, Y := 80) {
 	global scriptName, winTitle, statusText, SelectedMonitorIndex
 	MaxRetries := 10
@@ -1125,6 +1152,38 @@ CreateStatusMessage(Message, GuiName := 50, X := 0, Y := 80) {
 	}	
 }
 
+checkRainbowBorder() {
+	global winTitle, falsePositive
+	if(falsePositive = 1) {
+		Sleep, 250
+		searchVariation := 10
+	}
+	else {
+		Sleep, 1000
+		searchVariation := 25
+	}
+	pBitmap := from_window(WinExist(winTitle))
+	Path = %A_ScriptDir%\%defaultLanguage%\RainbowBorder.png
+	pNeedle := Gdip_CreateBitmapFromFile(Path)
+	vRet := Gdip_ImageSearch(pBitmap, pNeedle, vPosXY, 0, 0, 0, 0, searchVariation)
+	Gdip_DisposeImage(pNeedle)
+	Gdip_DisposeImage(pBitmap)
+	if (vRet > 0) {
+		CreateStatusMessage("Rainbow border Found!!! In instance: " . scriptName)
+		godPackLog = GPlog.txt
+		LogToDiscord("Congrats! Rainbow border found in instance: " . scriptName, true)
+		LogToFile("Congrats! Rainbow border found in instance: " . scriptName, godPackLog)
+		Screenshot()
+		killGodPackInstance()
+	}
+	else {
+		LogToDiscord("No zapdos found in instance: " . scriptName)
+		LogToFile("No zapdos found in instance: " . scriptName, godPackLog)
+	}
+
+	; Screenshot()
+}
+
 checkBorder() {
 	global winTitle, falsePositive
 	if(falsePositive = 1) {
@@ -1144,6 +1203,7 @@ checkBorder() {
 	Gdip_DisposeImage(pBitmap)
 	if (vRet = 1) {
 		CreateStatusMessage("Not a God Pack ")
+		LogToDiscord("Not a God Pack in instance: " . scriptName)
 	}
 	else {
 		pBitmap := from_window(WinExist(winTitle)) ; Pick your own window title
@@ -1155,11 +1215,13 @@ checkBorder() {
 		Gdip_DisposeImage(pBitmap)
 		if (vRet = 1) {
 			CreateStatusMessage("Not a God Pack ")
+			LogToDiscord("Not a God Pack in instance: " . scriptName)
 			LogToFile("Second card checked. Not a God Pack ")
 		}
 		else {
 			CreateStatusMessage("God Pack Found!!! In instance: " . scriptName)
 			godPackLog = GPlog.txt
+			LogToDiscord("Congrats! God pack found in instance: " . scriptName, true)
 			LogToFile("Congrats! God pack found in instance: " . scriptName, godPackLog)
 			Screenshot()
 			killGodPackInstance()
