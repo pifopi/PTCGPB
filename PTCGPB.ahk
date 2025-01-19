@@ -24,20 +24,29 @@ if FileExist(packsFile) ; Check if the file exists
 }
 InitializeJsonFile() ; Create or open the JSON file
 
+EnvGet, DISCORD_WEBHOOK, DISCORD_WEBHOOK
+if (A_ComputerName = "DESKTOP-FK592M6") {
+	SELECTED_MONITOR_INDEX := 2
+	INSTANCES := 5
+} else if (A_ComputerName = "DESKTOP-DON3F07") {
+	SELECTED_MONITOR_INDEX := 1
+	INSTANCES := 4
+}
+
 ; Create the main GUI for selecting number of instances
-	IniRead, EnteredName, Settings.ini, UserSettings, EnteredName
+	IniRead, EnteredName, Settings.ini, UserSettings, EnteredName, FrenchPenguin
 	IniRead, Delay, Settings.ini, UserSettings, Delay, 250
 	IniRead, folderPath, Settings.ini, UserSettings, folderPath, C:\Program Files\Netease
-	IniRead, discordWebhookURL, Settings.ini, UserSettings, discordWebhookURL, ""
-	IniRead, discordUserId, Settings.ini, UserSettings, discordUserId, ""
-	IniRead, changeDate, Settings.ini, UserSettings, ChangeDate, 0100
-	IniRead, Columns, Settings.ini, UserSettings, Columns, 5
+	IniRead, discordWebhookURL, Settings.ini, UserSettings, discordWebhookURL, %DISCORD_WEBHOOK%
+	IniRead, discordUserId, Settings.ini, UserSettings, discordUserId, "282197676982927375"
+	IniRead, changeDate, Settings.ini, UserSettings, ChangeDate, 0700
+	IniRead, Columns, Settings.ini, UserSettings, Columns, 6
 	IniRead, openPack, Settings.ini, UserSettings, openPack, Mew
 	IniRead, godPack, Settings.ini, UserSettings, godPack, Continue
-	IniRead, Instances, Settings.ini, UserSettings, Instances, 1
+	IniRead, Instances, Settings.ini, UserSettings, Instances, %INSTANCES%
 	IniRead, setSpeed, Settings.ini, UserSettings, setSpeed, 2x
-	IniRead, defaultLanguage, Settings.ini, UserSettings, defaultLanguage, Scale125
-	IniRead, SelectedMonitorIndex, Settings.ini, UserSettings, SelectedMonitorIndex, 1
+	IniRead, defaultLanguage, Settings.ini, UserSettings, defaultLanguage, Scale100
+	IniRead, SelectedMonitorIndex, Settings.ini, UserSettings, SelectedMonitorIndex, %SELECTED_MONITOR_INDEX%
 	IniRead, swipeSpeed, Settings.ini, UserSettings, swipeSpeed, 600
 	IniRead, skipInvalidGP, Settings.ini, UserSettings, skipInvalidGP, Yes
 	IniRead, deleteMethod, Settings.ini, UserSettings, deleteMethod, Clicks
